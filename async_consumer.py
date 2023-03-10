@@ -7,7 +7,6 @@ import uvicorn
 
 from fastapi import APIRouter, FastAPI
 from typing import Optional
-from multiprocessing import Process
 import sys, os
 
 from confluent_kafka import Consumer
@@ -35,6 +34,10 @@ app = FastAPI(
     contact={"name": "Blah", "email": "Blah@somewhere.com"},
 )
 
+kafka_topics = ['KAFKA_CMD']
+responseTopic = 'KAFKA_RESPONSE'
+running = True
+
 consumer = None
 producer = None
 router = APIRouter()
@@ -50,11 +53,11 @@ async def startup_event():
 
 @app.on_event("shutdown")
 def shutdown_event():
+    global running 
+    print("Shutdown, goodbye!")
     running = False
     consumer.close()   
     producer.close()
-
-
 
 @app.get("/")
 async def root():
@@ -63,11 +66,6 @@ async def root():
 @app.get("/health")
 async def health():
     return {"message": "I'm ok!"}
-
-    
-kafka_topics = ['KAFKA_CMD']
-responseTopic = 'KAFKA_RESPONSE'
-running = True
 
 def basic_consume_loop(consumer, topic, producer):
     try:
@@ -93,10 +91,6 @@ def basic_consume_loop(consumer, topic, producer):
         print("Close down consumer to commit final offsets.")
         consumer.close()
 
-def shutdown():
-    print("Shutdown, goodbye!")
-    running = False
-
 def msg_process(msg, producer):
     payload  = json.loads( msg.value())
     job_id = payload['job_id']
@@ -108,24 +102,7 @@ def msg_process(msg, producer):
     producer.produce(responseTopic, key="key", value=response_json_string.encode('utf-8'))
     producer.flush()
 
-def kafka_consumer():
-
-
-    # Instantiate
-    consumer = Consumer(conf)
-    producer = Producer(conf)
-    basic_consume_loop(consumer, kafka_topics, producer)
-    consumer.close()   
-
-def main():
-    print("main....")
 		
 if __name__ == "__main__":
-     consumer_process = Process(target=kafka_consumer)  
-     consumer_process.start()
-     
      # Start the FastAPI server
-     uvicorn.run(app, host="0.0.0.0", port=8080)
-
-     # Wait for the kafka consumer process to exit
-     consumer_process.join()
+     uvicorn.run(app, host='127.0.0.1', port=8000)
