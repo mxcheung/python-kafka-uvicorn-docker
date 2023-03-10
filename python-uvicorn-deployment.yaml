@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+version: v8
+metadata:
+  name: python-uvicorn-server
+  labels:
+    app: python-uvicorn-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-uvicorn-server
+      deployment: python-uvicorn-server
+  template:
+    metadata:
+      labels:
+        app: python-uvicorn-server-blue
+        deployment: python-uvicorn-server-blue
+        tier: App
+    spec:
+      securityContext: 
+        supplementalGroups: [123,456]
+      imagePullSecrets:
+        - name: application-images-au-it-pull-secret
+      containers:
+        - image: quay-repo/application-images/python-common:1.0
+          imagePullPolicy: Always
+          command: ["python",   "/python/scripts/confluent-kafka/fastapi_cmd_executor.py"]
+          name: python-uvicorn-server
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "100Mi"
+            limits:
+              cpu: "150m"
+              memory: "150Mi"
+          env:
+            - name: JAVA_ENV
+              value: uat
+            - name: ERROR
+              value: "*"
+            - name: PORT
+              value: "8080"
+            - name: TZ
+              value: Asia/Singapore
+          ports:
+            - containerPort: 8080
+          restartPolicy: Always
+          volumeMounts:
+            - name: env-properties
+              mountPath: /aac
+            - name: kafka-config
+              mountPath: /app/config
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
+            name: liveness  
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
+            name: readiness                        
+      volumes:
+        - name: env-properties
+          persistentVolumeClaim:
+            claimName: prop-claim
+        - name: kafka-config
+          configMap:
+            defaultMode: 511
+            name: kafka-config
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        searches:
+          - domain.local
