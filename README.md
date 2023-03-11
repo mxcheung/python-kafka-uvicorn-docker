@@ -6,6 +6,9 @@ https://github.com/confluentinc/confluent-kafka-python/blob/master/examples/asyn
 
 
 #Issues
+
+https://github.com/confluentinc/librdkafka/issues/1674
+rd_kafka_destroy hangs for consumer when called after a fork #2374
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 Shutdown, goodbye!
