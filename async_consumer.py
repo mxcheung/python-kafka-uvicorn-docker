@@ -44,12 +44,9 @@ router = APIRouter()
 
 @app.on_event("startup")
 async def startup_event():
-    global consumer, producer
-
-    # Instantiate
-    consumer = Consumer(conf)
-    producer = Producer(conf)
-    basic_consume_loop(consumer, kafka_topics, producer)
+    # Start the Kafka consumer process
+    loop = asyncio.get_event_loop()
+    loop.create_task(asyncio.to_thread(kafka_consumer))
 
 @app.on_event("shutdown")
 def shutdown_event():
@@ -66,6 +63,13 @@ async def root():
 @app.get("/health")
 async def health():
     return {"message": "I'm ok!"}
+
+def kafka_consumer():
+    global consumer, producer
+    # Instantiate
+    consumer = Consumer(conf)
+    producer = Producer(conf)
+    basic_consume_loop(consumer, kafka_topics, producer)
 
 def basic_consume_loop(consumer, topic, producer):
     try:
