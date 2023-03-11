@@ -1,5 +1,6 @@
 #!/aac/python/stream-virtualenv/bin/python3
 
+import logging
 import functools
 import contextvars
 
@@ -39,6 +40,15 @@ app = FastAPI(
     version="0.0.1",
     contact={"name": "Blah", "email": "Blah@somewhere.com"},
 )
+
+# Define the filter
+class EndpointFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.args and len(record.args) >= 3 and record.args[2] != "/health"
+
+# Add filter to the logger
+logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
+
 
 kafka_topics = ['KAFKA_CMD']
 responseTopic = 'KAFKA_RESPONSE'
