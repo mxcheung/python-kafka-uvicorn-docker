@@ -9,5 +9,16 @@ logging.basicConfig(
                     format=VERBOSE_FMT,
                     datefmt='%Y-%m-%d %H:%M:%S',
                     level=logging.INFO)
+
+def parse_argument():
+    import argparse, pathlib
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-username", type=str, help="name to say hello", default="joe")
+    args = parser.parse_args()
+    username = str(args.username)
+    return username
+
+username = parse_argument()
+
 if __name__ == "__main__":
-    logging.info("Hello Python! \n")
+    logging.info('Hello Python: {}'.format(username))
