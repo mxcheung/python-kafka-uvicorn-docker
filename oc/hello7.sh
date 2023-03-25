@@ -1,3 +1,5 @@
 #!/bin/sh
-cd /aac/python/scripts
+. /aac/python/scripts/common
+USER=auto
+cd /aac/python/scripts/oc
 ./hello7.py
