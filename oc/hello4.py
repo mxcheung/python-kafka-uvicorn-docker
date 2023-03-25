@@ -14,11 +14,13 @@ def parse_argument():
     import argparse, pathlib
     parser = argparse.ArgumentParser()
     parser.add_argument("-username", type=str, help="name to say hello", default="joe")
+    parser.add_argument("-procdate", type=str, help="processing date")
     args = parser.parse_args()
     username = str(args.username)
-    return username
+    procdate = str(args.procdate)
+    return username, procdate
 
-username = parse_argument()
+username, procdate = parse_argument()
 
 if __name__ == "__main__":
-    logging.info('Hello Python: {}'.format(username))
+    logging.info('Hello Python: {}, processing date: {}'.format(username,procdate))
