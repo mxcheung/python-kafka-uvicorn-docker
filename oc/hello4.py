@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import os
 
 VERBOSE_FMT = ('%(asctime)s %(levelname)s %(name)s %(module)s %(process)d %(thread)d '
                    '%(filename)s_%(lineno)s_%(funcName)s  %(message)s')
@@ -24,3 +25,4 @@ username, procdate = parse_argument()
 
 if __name__ == "__main__":
     logging.info('Hello Python: {}, processing date: {}'.format(username,procdate))
+    logging.info('User Id: {}'.format(os.environ.get('USER')))
