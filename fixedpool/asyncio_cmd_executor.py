@@ -149,6 +149,7 @@ def msg_process(msg, producer):
  #   producer.produce(responseTopic, key="key", value=response_json_string.encode('utf-8'))
 
     payload['returncode']  = result.returncode
+    payload['stderr']  = result.stderr.decode().strip()
 
     json_payload = json.dumps(payload).encode('utf-8')
     producer.produce(responseTopic, key=payload['job_id'], value=json_payload)    
