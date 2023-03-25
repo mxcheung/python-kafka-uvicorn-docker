@@ -40,6 +40,16 @@ conf = {
             "enable.ssl.certificate.verification": False
         }
 
+producerconf = {
+            'bootstrap.servers': 'host01.local:9093,host02.local:9093,host03.local:9093',
+            'client.id': 'clientid02',
+            "security.protocol": 'ssl',
+            "ssl.keystore.location": '/aac/kafka/ca-store/kafka.client.keystore.jks',
+            "ssl.keystore.password": 'please_replace',
+            "ssl.key.password": 'please_replace',
+            "enable.ssl.certificate.verification": False
+        }
+
 my_unique_id = str(uuid.uuid4())
 
 
@@ -60,14 +70,14 @@ payload['unique_id']=my_unique_id
 #payload['command']= f'/aac/python/scripts/hello8.py >> /aac/python/logs/DEPENDS_SYD_6011.log'
 payload['command']= command
 consumer_initialised = False
-
+exitcode=2
 
 
 def kafka_setup():
     global consumer, producer
     # Instantiate
     consumer = Consumer(conf)
-    producer = Producer(conf)
+    producer = Producer(producerconf)
 
 def on_assign(consumer, partitions):
     global consumer_initialised
@@ -103,15 +113,23 @@ def basic_consume_loop(consumer, topic):
         consumer.close()
 
 def msg_process(msg):
-    global running
+    global running, exitcode
   #  response_json_string  = json.loads( msg.value())
+    payload  = json.loads( msg.value())
     job_id = payload['job_id']
     unique_id = payload['unique_id']
+    returncode = payload['returncode']
+    stderr = payload['stderr']  
     logging.info('Received Job ID: {}, Unique ID: {}, Response {}'.format(job_id, unique_id, msg.value()))
     if (job_id == my_job_id) and (unique_id == my_unique_id):
        logging.info('Found my Job ID: {}, Unique ID: {} Response {}'.format(job_id, unique_id, msg.value()))
-       logging.info('Return exit code')
+       logging.info('Return exit code: {}'.format(returncode))
        running = False
+       if (returncode == 0):
+           exitcode = 2  
+       else:       
+           exitcode = returncode  
+           print(stderr, file=sys.stderr) 
 
 def submit(payload, producer):
     json_payload = json.dumps(payload).encode('utf-8')
@@ -129,3 +147,4 @@ if __name__ == "__main__":
     initialise_consumer(consumer, responseTopic)
     submit(payload,producer)
     basic_consume_loop(consumer, responseTopic)
+    sys.exit(exitcode)
