@@ -91,33 +91,31 @@ def basic_consume_loop(consumer, topic):
         logging.info("Close consumer.")
         consumer.close()
 
+
+def generate_control_cmd(payload):
+    returncode = payload['returncode']
+    country, jobnum = payload['job_id'].split("-")
+    if (returncode == EXIT_CODE_0):
+        status = "SUCCESS"
+    elif (returncode == EXIT_CODE_2):
+        status = "NONE"
+    else:       
+        status = "FAILED"  
+    command = f'/fcs/scripts/batch_process/control.pl -f A01 -e {country} -x COMPLETE -s {status} -p {jobnum}'
+    if returncode not in [EXIT_CODE_0,EXIT_CODE_2]:
+        error_msg = payload['stderr'] .replace('"'," ")
+        command = command + f' -E "{error_msg}"'
+    # logging.info('Job Id: {}, returncode: {}, status: {}'.format(payload['job_id'], returncode, status))
+    #logging.info('Job ID: {}, command : {}'.format(payload['job_id'], command))
+    return command        
+        
 def msg_process(msg):
     global running, exitcode
   #  response_json_string  = json.loads( msg.value())
    # logging.info('msg.value(): {}'.format(msg.value()))
     try:
         payload  = json.loads( msg.value())
-        job_id = payload['job_id']
-        unique_id = payload['unique_id']
-        returncode = payload['returncode']
-        stderr = payload['stderr']  
-        error_msg = stderr.replace('"'," ")
-        logging.info('Job ID: {}'.format(job_id))
-        country, jobnum = job_id.split("-")
-        status = "NONE"
-        if (returncode == EXIT_CODE_0):
-           status = "SUCCESS"
-        elif (returncode == EXIT_CODE_2):
-           status = "NONE"
-        else:       
-           status = "FAILED"  
-
-        command = f'/fcs/scripts/batch_process/control.pl -f A01 -e {country} -x COMPLETE -s {status} -p {jobnum}'
-        if returncode not in [EXIT_CODE_0,EXIT_CODE_2]:
-           command = command + f' -E "{error_msg}"'
-
-      #  logging.info('Job ID: {}, returncode: {}, status: {}'.format(job_id, returncode, status))
-      #  logging.info('Job ID: {}, command : {}'.format(job_id, command))
+        command = generate_control_cmd(payload)
         result = subprocess.run(command, shell=True)
         logging.info('Job ID: {}, Exit code of command {}: {}'.format(job_id, command, result.returncode))
     
