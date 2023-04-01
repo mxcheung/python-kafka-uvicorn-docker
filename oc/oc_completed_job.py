@@ -8,8 +8,6 @@ import uuid
 import time
 import logging
 
-
-
 VERBOSE_FMT = ('%(asctime)s %(levelname)s %(name)s %(module)s %(process)d %(thread)d '
                    '%(filename)s_%(lineno)s_%(funcName)s  %(message)s')
 
@@ -28,20 +26,10 @@ conf = {
             "enable.ssl.certificate.verification": False
         }
 
-
-
-
-logging.basicConfig( 
-                    format=VERBOSE_FMT,
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    level=logging.INFO)
-#logging.Formatter(fmt=cls.VERBOSE_FMT)
+logging.basicConfig( format=VERBOSE_FMT,  datefmt='%Y-%m-%d %H:%M:%S',  level=logging.INFO)
 responseTopic = ['JOB_RESPONSE']
 running = True
-
 consumer_initialised = False
-exitcode=2
-
 
 def kafka_setup():
     global consumer
