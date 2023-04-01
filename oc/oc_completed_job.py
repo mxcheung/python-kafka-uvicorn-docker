@@ -8,25 +8,49 @@ import uuid
 import time
 import logging
 
+# declare constants 
+EXIT_CODE_0 = 0
+EXIT_CODE_2 = 2
+
 VERBOSE_FMT = ('%(asctime)s %(levelname)s %(name)s %(module)s %(process)d %(thread)d '
                    '%(filename)s_%(lineno)s_%(funcName)s  %(message)s')
 
+def parse_argument():
+    import argparse, pathlib
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-job_id", type=str, help="job id" , default="AU-5010")
+    parser.add_argument("-command", type=str, help="Command to run")
+    args = parser.parse_args()
+    job_id = str(args.job_id)
+    command = str(args.command)
+    return job_id, command
+
 conf = {
             'bootstrap.servers': 'broker01:9093,broker02:9093,broker03:9093',
-            'client.id': 'sgvlapaacudep02',
-            'group.id': my_job_id,
+            'client.id': 'myclientid',
+            'group.id': 'oc_job_monitor',
             "enable.auto.commit": True,
             "auto.offset.reset": 'earliest',
             "security.protocol": 'ssl',
             "ssl.keystore.location": '/aac/kafka/ca-store/kafka.client.keystore.jks',
-            "ssl.keystore.password": 'clientpass',
-            "ssl.key.password": 'clientpass',
+            "ssl.keystore.password": 'please_replace',
+            "ssl.key.password": 'please_replace',
             "enable.ssl.certificate.verification": False
         }
 
-logging.basicConfig( format=VERBOSE_FMT,  datefmt='%Y-%m-%d %H:%M:%S',  level=logging.INFO)
+my_job_id, command = parse_argument()
+my_unique_id = str(uuid.uuid4())
+
+
+logging.basicConfig( 
+                    format=VERBOSE_FMT,
+                    datefmt='%Y-%m-%d %H:%M:%S',
+                    level=logging.INFO)
+#logging.Formatter(fmt=cls.VERBOSE_FMT)
+kafka_topics = 'JOB_CMD'
 responseTopic = ['JOB_RESPONSE']
 running = True
+
 consumer_initialised = False
 
 def kafka_setup():
@@ -34,7 +58,18 @@ def kafka_setup():
     # Instantiate
     consumer = Consumer(conf)
 
-def basic_consume_loop(consumer):
+def on_assign(consumer, partitions):
+    global consumer_initialised
+    logging.info('Partitions assigned: {}'.format(partitions))
+    consumer_initialised = True
+
+def initialise_consumer(consumer, topic):
+    global consumer_initialised
+    consumer.subscribe(topic, on_assign=on_assign)
+    while not consumer_initialised:
+        msg = consumer.poll(timeout=1.0)
+
+def basic_consume_loop(consumer, topic):
     try:
         while running:
             msg = consumer.poll(timeout=1.0)
@@ -63,16 +98,26 @@ def msg_process(msg):
     try:
         payload  = json.loads( msg.value())
         job_id = payload['job_id']
-        country = payload['country']
         unique_id = payload['unique_id']
         returncode = payload['returncode']
         stderr = payload['stderr']  
-    #    logging.info('Received Job ID: {}, Unique ID: {}, Response {}'.format(job_id, unique_id, msg.value()))
-    #    if (job_id == my_job_id) and (unique_id == my_unique_id):
-    #        logging.info('Found my Job ID: {}, Unique ID: {} Response {}'.format(job_id, unique_id, msg.value()))
-     #       logging.info('Return exit code: {}'.format(returncode))
-        command = f'/scripts/batch_process/complete.pl -f XXX -e {country} -x COMPLETE -s NONE -p {job_id}'
-    #    logging.info('Job ID: {}, Command: {}'.format(job_id, command))
+        error_msg = stderr.replace('"'," ")
+        logging.info('Job ID: {}'.format(job_id))
+        country, jobnum = job_id.split("-")
+        status = "NONE"
+        if (returncode == EXIT_CODE_0):
+           status = "SUCCESS"
+        elif (returncode == EXIT_CODE_2):
+           status = "NONE"
+        else:       
+           status = "FAILED"  
+
+        command = f'/fcs/scripts/batch_process/control.pl -f A01 -e {country} -x COMPLETE -s {status} -p {jobnum}'
+        if returncode not in [EXIT_CODE_0,EXIT_CODE_2]:
+           command = command + f' -E "{error_msg}"'
+
+      #  logging.info('Job ID: {}, returncode: {}, status: {}'.format(job_id, returncode, status))
+      #  logging.info('Job ID: {}, command : {}'.format(job_id, command))
         result = subprocess.run(command, shell=True)
         logging.info('Job ID: {}, Exit code of command {}: {}'.format(job_id, command, result.returncode))
     
@@ -83,11 +128,13 @@ def msg_process(msg):
         dummy = 1
       #  logging.info("End message process.")
 
+
+
 def shutdown():
     logging.info("Shutdown, goodbye!")
     running = False
     
 if __name__ == "__main__":    
     kafka_setup()
-    basic_consume_loop(consumer)
-    sys.exit(exitcode)
+    initialise_consumer(consumer, responseTopic)
+    basic_consume_loop(consumer, responseTopic)
