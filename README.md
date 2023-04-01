@@ -4,6 +4,9 @@
 # Confluent Kafka
 https://github.com/confluentinc/confluent-kafka-python/blob/master/examples/asyncio_example.py
 
+# Job submitter and completed job 
+oc_job_submitter.py
+oc_completed_job.py
 
 #Issues
 
