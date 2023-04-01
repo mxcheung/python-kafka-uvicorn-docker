@@ -15,16 +15,6 @@ EXIT_CODE_2 = 2
 VERBOSE_FMT = ('%(asctime)s %(levelname)s %(name)s %(module)s %(process)d %(thread)d '
                    '%(filename)s_%(lineno)s_%(funcName)s  %(message)s')
 
-def parse_argument():
-    import argparse, pathlib
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-job_id", type=str, help="job id" , default="AU-5010")
-    parser.add_argument("-command", type=str, help="Command to run")
-    args = parser.parse_args()
-    job_id = str(args.job_id)
-    command = str(args.command)
-    return job_id, command
-
 conf = {
             'bootstrap.servers': 'broker01:9093,broker02:9093,broker03:9093',
             'client.id': 'myclientid',
@@ -38,19 +28,9 @@ conf = {
             "enable.ssl.certificate.verification": False
         }
 
-my_job_id, command = parse_argument()
-my_unique_id = str(uuid.uuid4())
-
-
-logging.basicConfig( 
-                    format=VERBOSE_FMT,
-                    datefmt='%Y-%m-%d %H:%M:%S',
-                    level=logging.INFO)
-#logging.Formatter(fmt=cls.VERBOSE_FMT)
-kafka_topics = 'JOB_CMD'
+logging.basicConfig( format=VERBOSE_FMT, datefmt='%Y-%m-%d %H:%M:%S',  level=logging.INFO)
 responseTopic = ['JOB_RESPONSE']
 running = True
-
 consumer_initialised = False
 
 def kafka_setup():
@@ -91,7 +71,6 @@ def basic_consume_loop(consumer, topic):
         logging.info("Close consumer.")
         consumer.close()
 
-
 def generate_control_cmd(payload):
     returncode = payload['returncode']
     country, jobnum = payload['job_id'].split("-")
@@ -125,8 +104,6 @@ def msg_process(msg):
     finally:
         dummy = 1
       #  logging.info("End message process.")
-
-
 
 def shutdown():
     logging.info("Shutdown, goodbye!")
