@@ -34,7 +34,7 @@ def kafka_setup():
     # Instantiate
     consumer = Consumer(conf)
 
-def basic_consume_loop(consumer, topic):
+def basic_consume_loop(consumer):
     try:
         while running:
             msg = consumer.poll(timeout=1.0)
@@ -89,5 +89,5 @@ def shutdown():
     
 if __name__ == "__main__":    
     kafka_setup()
-    basic_consume_loop(consumer, responseTopic)
+    basic_consume_loop(consumer)
     sys.exit(exitcode)
