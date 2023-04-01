@@ -5,6 +5,10 @@
 https://github.com/confluentinc/confluent-kafka-python/blob/master/examples/asyncio_example.py
 
 # Job submitter and completed job 
+
+ - Event driven job submitter will submit job and wait
+ - Completed jop wil listen to completed job events and mark job as SUCCESS or FAILURE
+
 - oc_job_submitter.py
 
 - oc_completed_job.py
