@@ -117,7 +117,7 @@ def msg_process(msg):
         payload  = json.loads( msg.value())
         command = generate_control_cmd(payload)
         result = subprocess.run(command, shell=True)
-        logging.info('Job ID: {}, Exit code of command {}: {}'.format(job_id, command, result.returncode))
+        logging.info('Job ID: {}, Exit code of command {}: {}'.format(payload['job_id'], command, result.returncode))
     
     except Exception as e:
         logging.info("Exception processing message.")
