@@ -18,7 +18,7 @@ conf = {
             "enable.auto.commit": True,
             "auto.offset.reset": 'earliest',
             "security.protocol": 'ssl',
-            "ssl.keystore.location": '/aac/java/rje2kafka/ca-store/kafka.client.keystore.jks',
+            "ssl.keystore.location": '/aac/kafka/ca-store/kafka.client.keystore.jks',
             "ssl.keystore.password": 'clientpass',
             "ssl.key.password": 'clientpass',
             "enable.ssl.certificate.verification": False
