@@ -7,26 +7,27 @@ import uuid
 import time
 import logging
 
+
+
 VERBOSE_FMT = ('%(asctime)s %(levelname)s %(name)s %(module)s %(process)d %(thread)d '
                    '%(filename)s_%(lineno)s_%(funcName)s  %(message)s')
 
 def parse_argument():
     import argparse, pathlib
     parser = argparse.ArgumentParser()
-    parser.add_argument("-job_id", type=str, help="job id" , default="5010")
-    parser.add_argument("-country", type=str, help="country" , default="SYD")
+    parser.add_argument("-job_id", type=str, help="job id" , default="SYD-9999")
     parser.add_argument("-command", type=str, help="Command to run")
     args = parser.parse_args()
     job_id = str(args.job_id)
-    country = str(args.country)
     command = str(args.command)
-    return job_id, country, command
-
-my_job_id, my_country, command = parse_argument()
+    return job_id, command
 
 
+my_job_id, command = parse_argument()
 
-producerconf = {
+
+
+conf = {
             'bootstrap.servers': 'localhost0`:9093,localhost02:9093,localhost03:9093',
             'client.id': 'sgvlapaacudep02',
             "security.protocol": 'ssl',
@@ -36,7 +37,6 @@ producerconf = {
             "enable.ssl.certificate.verification": False
         }
 
-my_unique_id = str(uuid.uuid4())
 
 logging.basicConfig(filename='/aac/python/logs/oc_job_submitter.log', 
                     format=VERBOSE_FMT,
