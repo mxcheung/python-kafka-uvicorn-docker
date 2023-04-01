@@ -11,8 +11,6 @@ import logging
 VERBOSE_FMT = ('%(asctime)s %(levelname)s %(name)s %(module)s %(process)d %(thread)d '
                    '%(filename)s_%(lineno)s_%(funcName)s  %(message)s')
 
-
-
 conf = {
             'bootstrap.servers': 'broker01:9093,broker02:9093,broker03:9093',
             'client.id': 'sgvlapaacudep02',
