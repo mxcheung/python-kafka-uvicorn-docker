@@ -9,9 +9,11 @@ https://github.com/confluentinc/confluent-kafka-python/blob/master/examples/asyn
  - Event driven job submitter will submit job and wait
  - Completed jop wil listen to completed job events and mark job as SUCCESS or FAILURE
 
-- oc_job_submitter.py
+- oc_job_submitter.py submit job to [job queue]
 
-- oc_completed_job.py
+- oc_job_executor.py listen to [job queue] and write return code to [response queue]
+     
+- oc_completed_job.py listen  to [response queue] and mark job as complete based on result.
 
 #Issues
 
